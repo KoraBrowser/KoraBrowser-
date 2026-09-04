@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ƙőra Browser</title>
+<style>
+:root {
+--accent-pink: #d81b60;
+--accent-pink-hover: #c2185b;
+--bg-theme: linear-gradient(180deg, #81d4fa 0%, #e0f7fa 40%, #ffffff 100%);
+--card-bg: rgba(255, 255, 255, 0.85);
+--bar-bg: rgba(235, 235, 240, 0.95);
+--shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+-webkit-tap-highlight-color: transparent;
+user-select: none;
+}
+
+html, body {
+width: 100%;
+height: 100%;
+overflow: hidden;
+background-color: #ffffff;
+}
+
+.app-container {
+width: 100vw;
+height: 100vh;
+background: var(--bg-theme);
+position: relative;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+transition: background 0.3s ease;
+}
+
+/* SPLASH SCREEN */
+.splash-screen {
+position: absolute;
+inset: 0;
+background: linear-gradient(180deg, #4fc3f7 0%, #b2ebf2 50%, #ffffff 100%);
+z-index: 100;
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+align-items: center;
+padding-bottom: 90px;
+transition: opacity 0.6s ease, visibility 0.6s;
+}
+
+.splash-screen.hidden {
+opacity: 0;
+visibility: hidden;
+}
+
+.splash-title {
+font-size: 52px;
+font-weight: 800;
+color: #263238;
+letter-spacing: -1px;
+}
+
+/* MAIN SCREEN */
+.main-screen {
+flex: 1;
+display: flex;
+flex-direction: column;
+padding: 20px;
+position: relative;
+opacity: 0;
+transition: opacity 0.5s ease 0.3s;
+max-width: 600px;
+margin: 0 auto;
+width: 100%;
+overflow-y: auto;
+}
+
+.main-screen.visible {
+opacity: 1;
+}
+
+.top-bar {
+display: flex;
+justify-content: flex-end;
+align-items: center;
+width: 100%;
+height: 40px;
+}
+
+.icon-btn {
+width: 42px;
+height: 42px;
+border-radius: 50%;
+background: rgba(255, 255, 255, 0.7);
+backdrop-filter: blur(10px);
+display: flex;
+align-items: center;
+justify-content: center;
+border: none;
+cursor: pointer;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+transition: transform 0.2s, background 0.2s;
+}
+
+.icon-btn:active {
+transform: scale(0.92);
+}
+
+.brand-header {
+text-align: center;
+margin-top: 10px;
+margin-bottom: 15px;
+}
+
+.brand-header h1 {
+font-size: 44px;
+font-weight: 800;
+color: #2c3e50;
+line-height: 1;
+}
+
+.brand-header p {
+font-size: 15px;
+font-weight: 700;
+color: #34495e;
+margin-top: 4px;
+}
+
+/* Сетка закладок */
+.bookmarks-grid {
+display: flex;
+flex-wrap: wrap;
+gap: 16px;
+padding: 10px 5px;
+align-content: flex-start;
+}
+
+.add-btn-card {
+width: 64px;
+height: 64px;
+border-radius: 20px;
+background: rgba(255, 255, 255, 0.85);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 28px;
+color: #7f8c8d;
+border: none;
+cursor: pointer;
+box-shadow: var(--shadow-soft);
+backdrop-filter: blur(5px);
+transition: transform 0.2s;
+}
+
+.add-btn-card:active {
+transform: scale(0.92);
+}
+
+.bookmark-item {
+display: flex;
+flex-direction: column;
+align-items: center;
+position: relative;
+width: 64px;
+}
+
+.bookmark-icon {
+width: 64px;
+height: 64px;
+border-radius: 20px;
+background: #ffffff;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 20px;
+font-weight: bold;
+color: var(--accent-pink);
+box-shadow: var(--shadow-soft);
+cursor: pointer;
+overflow: hidden;
+}
+
+.bookmark-icon img {
+width: 32px;
+height: 32px;
+object-fit: contain;
+}
+
+.bookmark-title {
+font-size: 12px;
+margin-top: 6px;
+color: #333;
+text-align: center;
+width: 100%;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.delete-bm {
+position: absolute;
+top: -4px;
+right: -4px;
+background: #ff5252;
+color: white;
+border-radius: 50%;
+width: 20px;
+height: 20px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+border: 2px solid #fff;
+cursor: pointer;
+}
+
+/* БЛОК НОВОСТЕЙ С ДИНАМИЧЕСКИМ ПОЛОЖЕНИЕМ */
+.news-section {
+width: 100%;
+margin: 15px 0;
+background: rgba(255, 255, 255, 0.75);
+backdrop-filter: blur(12px);
+border-radius: 20px;
+padding: 14px;
+box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+border: 1px solid rgba(255, 255, 255, 0.8);
+transition: order 0.3s ease;
+}
+
+.news-section.pos-top { order: -2; }
+.news-section.pos-center { order: 0; }
+.news-section.pos-bottom { order: 2; }
+
+.news-title {
+font-size: 14px;
+font-weight: 700;
+color: #2c3e50;
+margin-bottom: 10px;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.news-list {
+max-height: 160px;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 8px;
+font-size: 13px;
+}
+
+.news-item {
+background: rgba(255, 255, 255, 0.9);
+padding: 10px 12px;
+border-radius: 12px;
+color: #2c3e50;
+text-decoration: none;
+font-weight: 500;
+transition: background 0.2s, transform 0.1s;
+box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+display: block;
+line-height: 1.3;
+}
+
+.news-item:active {
+transform: scale(0.98);
+background: #ffffff;
+}
+
+/* ПАНЕЛЬ ПОИСКА, ПОДСКАЗКИ И НАВИГАЦИЯ */
+.bottom-container {
+margin-top: auto;
+width: 100%;
+display: flex;
+flex-direction: column;
+gap: 12px;
+padding-bottom: 10px;
+transition: all 0.3s ease;
+position: relative;
+}
+
+.bottom-container.top-position {
+order: -1;
+margin-top: 10px;
+margin-bottom: auto;
+}
+
+.bottom-container.center-position {
+margin-top: auto;
+margin-bottom: auto;
+}
+
+.search-box-relative {
+position: relative;
+width: 100%;
+}
+
+.search-bar-wrapper {
+background: var(--bar-bg);
+border-radius: 28px;
+padding: 6px 8px 6px 14px;
+display: flex;
+align-items: center;
+backdrop-filter: blur(10px);
+box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.search-left {
+display: flex;
+align-items: center;
+gap: 8px;
+flex: 1;
+}
+
+.engine-icon {
+width: 18px;
+height: 18px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.search-input-field {
+border: none;
+background: transparent;
+width: 100%;
+font-size: 15px;
+color: #333;
+outline: none;
+}
+
+/* ПОДСКАЗКИ ПОИСКА */
+.suggestions-box {
+position: absolute;
+left: 0;
+right: 0;
+bottom: 100%;
+margin-bottom: 8px;
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(15px);
+border-radius: 18px;
+box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+overflow: hidden;
+display: none;
+z-index: 30;
+flex-direction: column;
+}
+
+.bottom-container.top-position .suggestions-box {
+bottom: auto;
+top: 100%;
+margin-top: 8px;
+margin-bottom: 0;
+}
+
+.suggestion-item {
+padding: 10px 16px;
+font-size: 14px;
+color: #333;
+cursor: pointer;
+border-bottom: 1px solid rgba(0,0,0,0.05);
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.suggestion-item:last-child {
+border-bottom: none;
+}
+
+.suggestion-item:active {
+background: rgba(0,0,0,0.05);
+}
+
+.ai-btn {
+background: var(--accent-pink);
+color: white;
+border: none;
+padding: 6px 12px;
+border-radius: 14px;
+font-weight: 700;
+font-size: 13px;
+cursor: pointer;
+transition: background 0.2s;
+}
+
+.ai-btn:active {
+background: var(--accent-pink-hover);
+}
+
+.nav-bar {
+display: flex;
+justify-content: space-around;
+align-items: center;
+padding: 0 15px;
+}
+
+.nav-icon {
+background: none;
+border: none;
+cursor: pointer;
+color: #555;
+padding: 8px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+/* ИИ-ЧАТ (ƙőra ai) */
+.ai-screen {
+position: absolute;
+inset: 0;
+background: #ffffff;
+z-index: 50;
+display: flex;
+flex-direction: column;
+transform: translateY(100%);
+transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.ai-screen.active {
+transform: translateY(0);
+}
+
+.ai-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 16px 20px;
+border-bottom: 1px solid #f0f0f0;
+}
+
+.ai-title h3 {
+font-size: 20px;
+font-weight: 800;
+color: #111;
+text-align: center;
+}
+
+.ai-title p {
+font-size: 11px;
+color: #888;
+text-align: center;
+}
+
+.ai-chat-body {
+flex: 1;
+overflow-y: auto;
+padding: 20px;
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+
+.chat-bubble {
+max-width: 80%;
+padding: 12px 16px;
+border-radius: 18px;
+font-size: 14px;
+line-height: 1.4;
+animation: fadeIn 0.3s ease;
+}
+
+.chat-bubble.ai {
+background: #f0f2f5;
+color: #1c1e21;
+align-self: flex-start;
+border-bottom-left-radius: 4px;
+}
+
+.chat-bubble.user {
+background: var(--accent-pink);
+color: white;
+align-self: flex-end;
+border-bottom-right-radius: 4px;
+}
+
+.typing-indicator {
+align-self: flex-start;
+background: #f0f2f5;
+padding: 10px 16px;
+border-radius: 18px;
+font-size: 13px;
+color: #777;
+font-style: italic;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.dots {
+display: inline-block;
+width: 6px;
+height: 6px;
+border-radius: 50%;
+background: #888;
+animation: blink 1.4s infinite fill-mode: both;
+}
+
+@keyframes blink {
+0% { opacity: .2; }
+20% { opacity: 1; }
+100% { opacity: .2; }
+}
+
+.ai-answers-area {
+padding: 12px 20px;
+border-top: 1px solid #eee;
+display: flex;
+flex-direction: column;
+gap: 8px;
+background: #fff;
+max-height: 220px;
+overflow-y: auto;
+}
+
+.ai-user-option {
+background: #f8f9fa;
+border: 1px solid #e4e6eb;
+padding: 10px 14px;
+border-radius: 12px;
+font-size: 13px;
+color: #333;
+font-weight: 500;
+cursor: pointer;
+text-align: left;
+transition: background 0.2s;
+}
+
+.ai-user-option:active {
+background: #e4e6eb;
+}
+
+/* НАСТРОЙКИ И ИСТОРИЯ */
+.settings-screen, .history-screen {
+position: absolute;
+inset: 0;
+background: rgba(0,0,0,0.4);
+z-index: 60;
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+}
+
+.settings-screen.active, .history-screen.active {
+opacity: 1;
+pointer-events: auto;
+}
+
+.settings-card {
+background: #f8f9fa;
+border-top-left-radius: 32px;
+border-top-right-radius: 32px;
+height: 90%;
+display: flex;
+flex-direction: column;
+transform: translateY(100%);
+transition: transform 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+overflow: hidden;
+max-width: 600px;
+margin: 0 auto;
+width: 100%;
+}
+
+.settings-screen.active .settings-card, .history-screen.active .settings-card {
+transform: translateY(0);
+}
+
+.settings-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 20px;
+background: #fff;
+border-bottom: 1px solid #eee;
+}
+
+.settings-body {
+flex: 1;
+overflow-y: auto;
+padding: 20px;
+}
+
+.settings-section-title {
+font-size: 13px;
+color: #888;
+margin: 15px 0 8px 10px;
+text-transform: uppercase;
+}
+
+.themes-scroll {
+display: flex;
+gap: 12px;
+overflow-x: auto;
+padding: 10px 0;
+}
+
+.theme-card {
+width: 60px;
+height: 60px;
+border-radius: 16px;
+flex-shrink: 0;
+cursor: pointer;
+border: 2px solid transparent;
+box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.theme-card.selected {
+border-color: var(--accent-pink);
+}
+
+.position-selector {
+display: flex;
+justify-content: center;
+gap: 15px;
+margin: 10px 0;
+}
+
+.pos-option {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 8px;
+cursor: pointer;
+}
+
+.phone-preview {
+width: 50px;
+height: 80px;
+border: 2px solid #ccc;
+border-radius: 12px;
+background: #fff;
+position: relative;
+padding: 4px;
+}
+
+.phone-preview.selected {
+border-color: var(--accent-pink);
+}
+
+.preview-bar {
+height: 6px;
+background: #ddd;
+border-radius: 4px;
+position: absolute;
+left: 6px;
+right: 6px;
+}
+
+.preview-bar.bottom { bottom: 8px; }
+.preview-bar.center { top: 36px; }
+.preview-bar.top { top: 8px; }
+
+.settings-group {
+background: #fff;
+border-radius: 16px;
+overflow: hidden;
+}
+
+.settings-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 14px 16px;
+border-bottom: 1px solid #f0f0f0;
+font-size: 15px;
+}
+
+.settings-row:last-child {
+border-bottom: none;
+}
+
+.settings-select {
+border: none;
+background: transparent;
+font-size: 15px;
+color: #333;
+outline: none;
+font-weight: 600;
+}
+
+.toggle-switch {
+width: 48px;
+height: 28px;
+background: #e4e4e6;
+border-radius: 14px;
+position: relative;
+cursor: pointer;
+transition: background 0.25s;
+}
+
+.toggle-switch.active {
+background: var(--accent-pink);
+}
+
+.toggle-handle {
+width: 24px;
+height: 24px;
+background: #fff;
+border-radius: 50%;
+position: absolute;
+top: 2px;
+left: 2px;
+transition: transform 0.25s;
+box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.active .toggle-handle {
+transform: translateX(20px);
+}
+
+/* МОДАЛЬНОЕ ОКНО */
+.modal-overlay {
+position: absolute;
+inset: 0;
+background: rgba(0,0,0,0.4);
+z-index: 80;
+display: none;
+align-items: center;
+justify-content: center;
+}
+
+.modal-card {
+background: white;
+width: 85%;
+max-width: 400px;
+border-radius: 20px;
+padding: 20px;
+box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-card h3 { margin-bottom: 12px; }
+
+.modal-card input {
+width: 100%;
+padding: 10px;
+margin-bottom: 10px;
+border: 1px solid #ccc;
+border-radius: 8px;
+outline: none;
+}
+
+.modal-actions {
+display: flex;
+justify-content: flex-end;
+gap: 10px;
+}
+
+.modal-btn {
+padding: 8px 16px;
+border-radius: 8px;
+border: none;
+cursor: pointer;
+}
+
+.modal-btn.primary {
+background: var(--accent-pink);
+color: white;
+}
+
+/* ИСТОРИЯ ЭЛЕМЕНТЫ */
+.history-item {
+padding: 12px;
+background: #fff;
+border-radius: 12px;
+margin-bottom: 8px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.history-item-title {
+font-weight: 600;
+font-size: 14px;
+color: #2c3e50;
+}
+
+.history-item-url {
+font-size: 12px;
+color: #7f8c8d;
+word-break: break-all;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(4px); }
+to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container" id="appContainer">
+<!-- SPLASH SCREEN -->
+<div class="splash-screen" id="splash">
+<div class="splash-title">ƙőra</div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div class="main-screen" id="mainScreen">
+<div class="top-bar">
+<button class="icon-btn" id="openSettings">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+</button>
+</div>
+
+<div class="brand-header">
+<h1>ƙőra</h1>
+<p>Free browser</p>
+</div>
+
+<!-- Сетка закладок -->
+<div class="bookmarks-grid" id="bookmarksGrid"></div>
+
+<!-- БЛОК СВЕЖИХ НОВОСТЕЙ -->
+<div class="news-section" id="newsSection">
+<div class="news-title">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M9 12h6m-6 4h4"/></svg>
+Свежие новости
+</div>
+<div id="newsContainer" class="news-list">Загрузка новостей...</div>
+</div>
+
+<!-- Поиск и Навигация -->
+<div class="bottom-container" id="bottomContainer">
+<div class="search-box-relative">
+<div class="suggestions-box" id="suggestionsBox"></div>
+<div class="search-bar-wrapper">
+<div class="search-left">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="1.5" fill="#666"/></svg>
+<div style="width:1px; height:16px; background:#ccc;"></div>
+<div class="engine-icon" id="engineIcon"></div>
+<input type="text" class="search-input-field" id="searchInput" placeholder="Искать в Google" autocomplete="off">
+</div>
+<button class="ai-btn" id="openAiBtn">AI</button>
+</div>
+</div>
+
+<!-- Уменьшенная навигационная панель (3 кнопки) -->
+<div class="nav-bar">
+<button class="nav-icon" id="btnBack" title="Назад"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+<button class="nav-icon" id="btnHome" title="Главная"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
+<button class="nav-icon" id="btnHistory" title="История"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>
+</div>
+</div>
+</div>
+
+<!-- ИИ-ЧАТ (ƙőra ai) -->
+<div class="ai-screen" id="aiScreen">
+<div class="ai-header">
+<button class="icon-btn" id="closeAiBtn">×</button>
+<div class="ai-title">
+<h3>ƙőra ai</h3>
+<p>Умный помощник</p>
+</div>
+<div style="width: 42px;"></div>
+</div>
+<div class="ai-chat-body" id="aiChatBody"></div>
+<div class="ai-answers-area" id="aiAnswersArea"></div>
+</div>
+
+<!-- НАСТРОЙКИ -->
+<div class="settings-screen" id="settingsScreen">
+<div class="settings-card">
+<div class="settings-header">
+<button class="icon-btn" id="closeSettings">×</button>
+<h3 style="font-size: 17px;">Стартовая страница</h3>
+<div style="width: 42px;"></div>
+</div>
+<div class="settings-body">
+
+<div class="settings-section-title">Обои</div>
+<div class="settings-group" style="padding: 10px 16px;">
+<div class="settings-row" style="padding: 4px 0 10px 0;">
+<span>Показывать обои</span>
+<div class="toggle-switch active" id="toggleWallpaper"><div class="toggle-handle"></div></div>
+</div>
+<div class="themes-scroll" id="themesList"></div>
+</div>
+
+<div class="settings-section-title">Положение поиска</div>
+<div class="position-selector">
+<div class="pos-option" id="optPosTop">
+<div class="phone-preview" id="prevTop"><div class="preview-bar top"></div></div>
+<span style="font-size:12px;">Вверху</span>
+</div>
+<div class="pos-option" id="optPosCenter">
+<div class="phone-preview" id="prevCenter"><div class="preview-bar center"></div></div>
+<span style="font-size:12px;">Посередине</span>
+</div>
+<div class="pos-option" id="optPosBottom">
+<div class="phone-preview selected" id="prevBottom"><div class="preview-bar bottom"></div></div>
+<span style="font-size:12px;">Внизу</span>
+</div>
+</div>
+
+<div class="settings-section-title">Положение новостей</div>
+<div class="position-selector">
+<div class="pos-option" id="optNewsTop">
+<div class="phone-preview" id="prevNewsTop"><div class="preview-bar top"></div></div>
+<span style="font-size:12px;">Вверху</span>
+</div>
+<div class="pos-option" id="optNewsCenter">
+<div class="phone-preview" id="prevNewsCenter"><div class="preview-bar center"></div></div>
+<span style="font-size:12px;">Посередине</span>
+</div>
+<div class="pos-option" id="optNewsBottom">
+<div class="phone-preview selected" id="prevNewsBottom"><div class="preview-bar bottom"></div></div>
+<span style="font-size:12px;">Внизу</span>
+</div>
+</div>
+
+<div class="settings-section-title">Поиск</div>
+<div class="settings-group">
+<div class="settings-row">
+<span>Поисковая система</span>
+<select class="settings-select" id="searchEngineSelect">
+<option value="google">Google</option>
+<option value="bing">Bing</option>
+<option value="yahoo">Yahoo!</option>
+</select>
+</div>
+</div>
+
+<div class="settings-section-title">Быстрый доступ</div>
+<div class="settings-group">
+<div class="settings-row">
+<span>Показывать закладки</span>
+<div class="toggle-switch active" id="toggleBookmarks"><div class="toggle-handle"></div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ЭКРАН ИСТОРИИ -->
+<div class="history-screen" id="historyScreen">
+<div class="settings-card">
+<div class="settings-header">
+<button class="icon-btn" id="closeHistory">×</button>
+<h3 style="font-size: 17px;">История просмотров</h3>
+<button class="modal-btn" id="clearHistoryBtn" style="color: #d32f2f; font-weight: 600;">Очистить</button>
+</div>
+<div class="settings-body" id="historyContainer"></div>
+</div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ЗАКЛАДКИ -->
+<div class="modal-overlay" id="bookmarkModal">
+<div class="modal-card">
+<h3>Новая закладка</h3>
+<input type="text" id="bmTitleInput" placeholder="Название (например, Google)">
+<input type="text" id="bmUrlInput" placeholder="URL (например, google.com)">
+<div class="modal-actions">
+<button class="modal-btn" id="cancelBmModal">Отмена</button>
+<button class="modal-btn primary" id="saveBmModal">Добавить</button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+/* ТЕМЫ ОФОРМЛЕНИЯ */
+const themes = [
+{ id: 'theme1', bg: 'linear-gradient(180deg, #e1bee7 0%, #f3e5f5 50%, #ffffff 100%)' },
+{ id: 'theme2', bg: 'linear-gradient(180deg, #81d4fa 0%, #e0f7fa 40%, #ffffff 100%)' },
+{ id: 'theme3', bg: 'linear-gradient(180deg, #b2ebf2 0%, #e0f2f1 50%, #ffffff 100%)' },
+{ id: 'theme4', bg: 'linear-gradient(180deg, #f8bbd0 0%, #fce4ec 50%, #ffffff 100%)' },
+{ id: 'theme5', bg: 'linear-gradient(180deg, #ffe0b2 0%, #fff3e0 50%, #ffffff 100%)' },
+{ id: 'theme6', bg: '#ffffff' }
+];
+
+/* ЛОГОТИПЫ ПОИСКОВИКОВ */
+const engineIcons = {
+google: `<svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>`,
+bing: `<svg width="16" height="16" viewBox="0 0 24 24" fill="#00838f"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg>`,
+yahoo: `<svg width="16" height="16" viewBox="0 0 24 24" fill="#6001d2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 10.9 12 11.5 12 13h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>`
+};
+
+/* НАЧАЛЬНЫЕ ЗАКЛАДКИ ПО УМОЛЧАНИЮ */
+const defaultBookmarks = [
+{ title: 'Google', url: 'https://google.com' },
+{ title: 'Википедия', url: 'https://ru.wikipedia.org' },
+{ title: 'YouTube', url: 'https://youtube.com' }
+];
+
+/* НАСТРОЙКИ ПО УМОЛЧАНИЮ */
+const defaultSettings = {
+barPosition: 'bottom',
+newsPosition: 'center',
+searchEngine: 'google',
+showWallpaper: true,
+selectedTheme: 0,
+showBookmarks: true
+};
+
+let settings = JSON.parse(localStorage.getItem('kora_settings')) || defaultSettings;
+let bookmarks = JSON.parse(localStorage.getItem('kora_bookmarks')) || defaultBookmarks;
+let historyData = JSON.parse(localStorage.getItem('kora_history')) || [];
+
+/* ИНИЦИАЛИЗАЦИЯ */
+window.addEventListener('DOMContentLoaded', () => {
+setTimeout(() => {
+document.getElementById('splash').classList.add('hidden');
+document.getElementById('mainScreen').classList.add('visible');
+}, 1500);
+
+renderThemes();
+applySettings();
+renderBookmarks();
+loadNews();
+});
+
+/* ЗАГРУЗКА НОВОСТЕЙ */
+async function loadNews() {
+const container = document.getElementById('newsContainer');
+try {
+const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://lenta.ru/rss/news');
+const data = await res.json();
+if (data.status === 'ok') {
+container.innerHTML = '';
+data.items.slice(0, 6).forEach(item => {
+const a = document.createElement('a');
+a.className = 'news-item';
+a.href = item.link;
+a.target = '_blank';
+a.innerText = item.title;
+container.appendChild(a);
+});
+} else {
+container.innerText = 'Не удалось загрузить новости.';
+}
+} catch (e) {
+container.innerText = 'Ошибка загрузки новостей.';
+}
+}
+
+/* ЭЛЕМЕНТЫ UI */
+const bookmarkModal = document.getElementById('bookmarkModal');
+const searchInput = document.getElementById('searchInput');
+const suggestionsBox = document.getElementById('suggestionsBox');
+const bottomContainer = document.getElementById('bottomContainer');
+const newsSection = document.getElementById('newsSection');
+const appContainer = document.getElementById('appContainer');
+
+/* УПРАВЛЕНИЕ ЗАКЛАДКАМИ */
+document.getElementById('cancelBmModal').addEventListener('click', () => {
+bookmarkModal.style.display = 'none';
+});
+
+document.getElementById('saveBmModal').addEventListener('click', () => {
+const title = document.getElementById('bmTitleInput').value.trim();
+let url = document.getElementById('bmUrlInput').value.trim();
+
+if (title && url) {
+if (!/^https?:\/\//i.test(url)) {
+url = 'https://' + url;
+}
+bookmarks.push({ title, url });
+localStorage.setItem('kora_bookmarks', JSON.stringify(bookmarks));
+renderBookmarks();
+bookmarkModal.style.display = 'none';
+document.getElementById('bmTitleInput').value = '';
+document.getElementById('bmUrlInput').value = '';
+}
+});
+
+function renderBookmarks() {
+const grid = document.getElementById('bookmarksGrid');
+grid.innerHTML = '';
+
+if (!settings.showBookmarks) return;
+
+bookmarks.forEach((bm, index) => {
+const item = document.createElement('div');
+item.className = 'bookmark-item';
+
+const icon = document.createElement('div');
+icon.className = 'bookmark-icon';
+
+let domain = '';
+try { domain = new URL(bm.url).hostname; } catch(e) { domain = bm.url; }
+
+const img = document.createElement('img');
+img.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+img.onerror = () => { icon.innerText = bm.title.charAt(0).toUpperCase(); };
+
+icon.appendChild(img);
+icon.onclick = () => {
+saveHistory('Закладка: ' + bm.title, bm.url);
+window.open(bm.url, '_blank');
+};
+
+const title = document.createElement('div');
+title.className = 'bookmark-title';
+title.innerText = bm.title;
+
+const del = document.createElement('div');
+del.className = 'delete-bm';
+del.innerText = '×';
+del.onclick = (e) => {
+e.stopPropagation();
+bookmarks.splice(index, 1);
+localStorage.setItem('kora_bookmarks', JSON.stringify(bookmarks));
+renderBookmarks();
+};
+
+item.appendChild(icon);
+item.appendChild(title);
+item.appendChild(del);
+grid.appendChild(item);
+});
+
+/* Кнопка "Плюс" открывает добавление закладок напрямую */
+const plusBtn = document.createElement('button');
+plusBtn.className = 'add-btn-card';
+plusBtn.innerText = '+';
+plusBtn.onclick = () => {
+bookmarkModal.style.display = 'flex';
+};
+grid.appendChild(plusBtn);
+}
+
+/* ПОИСК И ПОДСКАЗКИ */
+let fetchTimeout = null;
+
+searchInput.addEventListener('input', (e) => {
+const val = e.target.value.trim();
+if (!val) {
+suggestionsBox.style.display = 'none';
+return;
+}
+
+clearTimeout(fetchTimeout);
+fetchTimeout = setTimeout(() => {
+/* Подключение автодополнения Google Suggestions */
+const script = document.createElement('script');
+script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(val)}&callback=handleSuggestions`;
+document.body.appendChild(script);
+document.body.removeChild(script);
+}, 150);
+});
+
+window.handleSuggestions = function(data) {
+if (!data || !data[1] || data[1].length === 0) {
+suggestionsBox.style.display = 'none';
+return;
+}
+
+suggestionsBox.innerHTML = '';
+data[1].slice(0, 5).forEach(text => {
+const item = document.createElement('div');
+item.className = 'suggestion-item';
+item.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#777" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> ${text}`;
+item.onclick = () => {
+searchInput.value = text;
+suggestionsBox.style.display = 'none';
+executeSearch(text);
+};
+suggestionsBox.appendChild(item);
+});
+suggestionsBox.style.display = 'flex';
+};
+
+document.addEventListener('click', (e) => {
+if (!e.target.closest('.search-box-relative')) {
+suggestionsBox.style.display = 'none';
+}
+});
+
+searchInput.addEventListener('keypress', (e) => {
+if (e.key === 'Enter') {
+const query = searchInput.value.trim();
+if (query) {
+suggestionsBox.style.display = 'none';
+executeSearch(query);
+}
+}
+});
+
+function executeSearch(query) {
+let targetUrl = '';
+const isUrl = /^(https?:\/\/)?([\w\d\-_]+\.)+[\w\d\-_]+(\/.*)?$/i.test(query);
+
+if (isUrl) {
+targetUrl = /^https?:\/\//i.test(query) ? query : 'https://' + query;
+} else {
+if (settings.searchEngine === 'bing') {
+targetUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+} else if (settings.searchEngine === 'yahoo') {
+targetUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}`;
+} else {
+targetUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}
+}
+
+saveHistory(query, targetUrl);
+window.open(targetUrl, '_blank');
+searchInput.value = '';
+}
+
+function saveHistory(title, url) {
+historyData.unshift({ title, url, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+localStorage.setItem('kora_history', JSON.stringify(historyData));
+}
+
+/* ИСТОРИЯ ПРОСМОТРОВ */
+const historyScreen = document.getElementById('historyScreen');
+document.getElementById('btnHistory').onclick = () => {
+renderHistory();
+historyScreen.classList.add('active');
+};
+document.getElementById('closeHistory').onclick = () => historyScreen.classList.remove('active');
+
+function renderHistory() {
+const container = document.getElementById('historyContainer');
+container.innerHTML = '';
+if (historyData.length === 0) {
+container.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px;">История пуста</div>';
+return;
+}
+historyData.forEach(item => {
+const div = document.createElement('div');
+div.className = 'history-item';
+div.innerHTML = `
+<div class="history-item-title">${item.title} <span style="font-size:11px; color:#aaa; font-weight:normal;">${item.date}</span></div>
+<div class="history-item-url">${item.url}</div>
+`;
+div.onclick = () => window.open(item.url, '_blank');
+container.appendChild(div);
+});
+}
+
+document.getElementById('clearHistoryBtn').onclick = () => {
+historyData = [];
+localStorage.removeItem('kora_history');
+renderHistory();
+};
+
+/* НАСТРОЙКИ И ПОЛОЖЕНИЯ */
+const settingsScreen = document.getElementById('settingsScreen');
+document.getElementById('openSettings').onclick = () => settingsScreen.classList.add('active');
+document.getElementById('closeSettings').onclick = () => settingsScreen.classList.remove('active');
+
+function renderThemes() {
+const list = document.getElementById('themesList');
+list.innerHTML = '';
+themes.forEach((t, idx) => {
+const card = document.createElement('div');
+card.className = `theme-card ${settings.selectedTheme === idx ? 'selected' : ''}`;
+card.style.background = t.bg;
+card.onclick = () => {
+settings.selectedTheme = idx;
+saveSettings();
+};
+list.appendChild(card);
+});
+}
+
+function applySettings() {
+// Поиск положение
+bottomContainer.classList.remove('top-position', 'center-position');
+document.getElementById('prevBottom').classList.remove('selected');
+document.getElementById('prevCenter').classList.remove('selected');
+document.getElementById('prevTop').classList.remove('selected');
+
+if (settings.barPosition === 'top') {
+bottomContainer.classList.add('top-position');
+document.getElementById('prevTop').classList.add('selected');
+} else if (settings.barPosition === 'center') {
+bottomContainer.classList.add('center-position');
+document.getElementById('prevCenter').classList.add('selected');
+} else {
+document.getElementById('prevBottom').classList.add('selected');
+}
+
+// Новости положение
+newsSection.classList.remove('pos-top', 'pos-center', 'pos-bottom');
+document.getElementById('prevNewsTop').classList.remove('selected');
+document.getElementById('prevNewsCenter').classList.remove('selected');
+document.getElementById('prevNewsBottom').classList.remove('selected');
+
+if (settings.newsPosition === 'top') {
+newsSection.classList.add('pos-top');
+document.getElementById('prevNewsTop').classList.add('selected');
+} else if (settings.newsPosition === 'bottom') {
+newsSection.classList.add('pos-bottom');
+document.getElementById('prevNewsBottom').classList.add('selected');
+} else {
+newsSection.classList.add('pos-center');
+document.getElementById('prevNewsCenter').classList.add('selected');
+}
+
+document.getElementById('searchEngineSelect').value = settings.searchEngine;
+document.getElementById('engineIcon').innerHTML = engineIcons[settings.searchEngine] || engineIcons.google;
+
+const engineName = settings.searchEngine.charAt(0).toUpperCase() + settings.searchEngine.slice(1);
+searchInput.placeholder = `Искать в ${settings.searchEngine === 'yahoo' ? 'Yahoo!' : engineName}`;
+
+if (settings.showWallpaper) {
+appContainer.style.background = themes[settings.selectedTheme].bg;
+} else {
+appContainer.style.background = '#ffffff';
+}
+
+updateToggle('toggleWallpaper', settings.showWallpaper);
+updateToggle('toggleBookmarks', settings.showBookmarks);
+
+renderThemes();
+renderBookmarks();
+}
+
+function updateToggle(id, val) {
+const el = document.getElementById(id);
+if (val) el.classList.add('active'); else el.classList.remove('active');
+}
+
+document.getElementById('optPosTop').onclick = () => { settings.barPosition = 'top'; saveSettings(); };
+document.getElementById('optPosCenter').onclick = () => { settings.barPosition = 'center'; saveSettings(); };
+document.getElementById('optPosBottom').onclick = () => { settings.barPosition = 'bottom'; saveSettings(); };
+
+document.getElementById('optNewsTop').onclick = () => { settings.newsPosition = 'top'; saveSettings(); };
+document.getElementById('optNewsCenter').onclick = () => { settings.newsPosition = 'center'; saveSettings(); };
+document.getElementById('optNewsBottom').onclick = () => { settings.newsPosition = 'bottom'; saveSettings(); };
+
+document.getElementById('searchEngineSelect').onchange = (e) => {
+settings.searchEngine = e.target.value;
+saveSettings();
+};
+
+function bindToggle(id, key) {
+document.getElementById(id).onclick = () => {
+settings[key] = !settings[key];
+saveSettings();
+};
+}
+
+bindToggle('toggleWallpaper', 'showWallpaper');
+bindToggle('toggleBookmarks', 'showBookmarks');
+
+function saveSettings() {
+localStorage.setItem('kora_settings', JSON.stringify(settings));
+applySettings();
+}
+
+/* КНОПКИ НАВИГАЦИИ */
+document.getElementById('btnHome').onclick = () => location.reload();
+document.getElementById('btnBack').onclick = () => history.back();
+
+/* ИИ-ЧАТ С РАСШИРЕННОЙ БАЗОЙ (30 ВОПРОСОВ И ДИАЛОГОВЫХ ВЕТОК) */
+const aiScreen = document.getElementById('aiScreen');
+const aiChatBody = document.getElementById('aiChatBody');
+const aiAnswersArea = document.getElementById('aiAnswersArea');
+
+const chatTree = {
+start: {
+text: "Привет! Я ƙőra ai. Что вас интересует? Выберите тему:",
+options: [
+{ text: "1. Как настроить этот браузер?", next: "q1" },
+{ text: "2. Как быстро искать информацию?", next: "q2" },
+{ text: "3. Как планировать свой день?", next: "q3" },
+{ text: "4. Как повысить продуктивность?", next: "q4" },
+{ text: "5. Расскажи интересное про космос", next: "q5" }
+]
+},
+q1: {
+text: "Вы можете изменять положение поиска и новостей, менять темы и управлять закладками через Меню настроек (иконка справа вверху).",
+options: [
+{ text: "6. Как поменять темы оформления?", next: "q6" },
+{ text: "7. Как изменить поисковую систему?", next: "q7" },
+{ text: "Вернуться в главное меню", next: "start" }
+]
+},
+q2: {
+text: "Используйте встроенные подсказки при вводе запроса! Также вы можете прямо указывать адреса сайтов в поисковой строке.",
+options: [
+{ text: "8. Какие есть горячие клавиши?", next: "q8" },
+{ text: "9. Как переключиться на Bing или Yahoo?", next: "q9" },
+{ text: "Вернуться в главное меню", next: "start" }
+]
+},
+q3: {
+text: "Разделяйте задачи на мелкие шаги, делайте перерывы каждые 45 минут и ведите списки дел.",
+options: [
+{ text: "10. Что за техника Помодоро?", next: "q10" },
+{ text: "11. Как бороться с прокрастинацией?", next: "q11" },
+{ text: "Вернуться в главное меню", next: "start" }
+]
+},
+q4: {
+text: "Уберите лишние уведомления, настройте удобный рабочий стол и выделяйте время на полноценный отдых.",
+options: [
+{ text: "12. Как спать лучше?", next: "q12" },
+{ text: "13. Советы по концентрации внимания", next: "q13" },
+{ text: "Вернуться в главное меню", next: "start" }
+]
+},
+q5: {
+text: "Знали ли вы, что один день на Венере длится дольше, чем один год на Венере?",
+options: [
+{ text: "14. Расскажи ещё про Марс", next: "q14" },
+{ text: "15. Что такое черные дыры?", next: "q15" },
+{ text: "Вернуться в главное меню", next: "start" }
+]
+},
+q6: {
+text: "В настройках прокрутите до блока «Обои» и выберите любой понравившийся градиент.",
+options: [{ text: "16. А можно отключить обои?", next: "q16" }, { text: "В главное меню", next: "start" }]
+},
+q7: {
+text: "Откройте настройки, перейдите к разделу «Поиск» и выберите Google, Bing или Yahoo.",
+options: [{ text: "17. Какой поисковик лучше?", next: "q17" }, { text: "В главное меню", next: "start" }]
+},
+q8: {
+text: "Нажмите Enter для быстрого перехода по первому запросу или выберите подсказку из списка.",
+options: [{ text: "18. Как очистить историю поиска?", next: "q18" }, { text: "В главное меню", next: "start" }]
+},
+q9: {
+text: "Bing отлично подходит для визуального поиска, а Yahoo — для чтения новостей.",
+options: [{ text: "19. Как вернуть Google?", next: "q19" }, { text: "В главное меню", next: "start" }]
+},
+q10: {
+text: "Техника Помодоро: 25 минут работы, затем 5 минут отдыха. Повторить 4 раза, затем длинный перерыв.",
+options: [{ text: "20. Какое приложение для этого использовать?", next: "q20" }, { text: "В главное меню", next: "start" }]
+},
+q11: {
+text: "Правило 2 минут: если дело занимает меньше 2 минут, сделайте его прямо сейчас!",
+options: [{ text: "21. А если задача огромная?", next: "q21" }, { text: "В главное меню", next: "start" }]
+},
+q12: {
+text: "Старайтесь ложиться в одно время и выключать экраны за час до сна.",
+options: [{ text: "22. Почему нельзя смотреть в экран перед сном?", next: "q22" }, { text: "В главное меню", next: "start" }]
+},
+q13: {
+text: "Попробуйте слушать белый шум или фоновую музыку без слов во время работы.",
+options: [{ text: "23. Какой жанр музыки помогает?", next: "q23" }, { text: "В главное меню", next: "start" }]
+},
+q14: {
+text: "Закат на Марсе выглядит синим из-за того, как марсианская пыль рассеивает свет!",
+options: [{ text: "24. Есть ли на Марсе вода?", next: "q24" }, { text: "В главное меню", next: "start" }]
+},
+q15: {
+text: "Черная дыра — это область пространства-времени с настолько сильным гравитационным притяжением, что его не может покинуть даже свет.",
+options: [{ text: "25. Что находится внутри?", next: "q25" }, { text: "В главное меню", next: "start" }]
+},
+q16: { text: "Да, переключатель «Показывать обои» в настройках сделает фон чисто белым.", options: [{ text: "К началу", next: "start" }] },
+q17: { text: "Google дает наиболее точные результаты, Bing хорош для изображений.", options: [{ text: "К началу", next: "start" }] },
+q18: { text: "Нажмите на иконку часов внизу, чтобы открыть историю и очистить её.", options: [{ text: "К началу", next: "start" }] },
+q19: { text: "В настройках снова выберите Google в списке поисковых систем.", options: [{ text: "К началу", next: "start" }] },
+q20: { text: "Отлично подойдут приложения Focus To-Do, Forest или обычный таймер.", options: [{ text: "26. А бумажный вариант?", next: "q26" }, { text: "К началу", next: "start" }] },
+q21: { text: "Разбейте её на маленькие подзадачи («съешьте слона по кусочкам»).", options: [{ text: "27. Как мотивировать себя?", next: "q27" }, { text: "К началу", next: "start" }] },
+q22: { text: "Синий свет экранов подавляет выработку мелатонина — гормона сна.", options: [{ text: "28. Помогает ли ночной режим?", next: "q28" }, { text: "К началу", next: "start" }] },
+q23: { text: "Lofi Hip-Hop, эмбиент или классическая музыка улучшают фокус.", options: [{ text: "29. Где послушать?", next: "q29" }, { text: "К началу", next: "start" }] },
+q24: { text: "Да, на Марсе есть водяной лед на полюсах и под поверхностью.", options: [{ text: "30. Можно ли там жить?", next: "q30" }, { text: "К началу", next: "start" }] },
+q25: { text: "Центр черной дыры называется сингулярностью, где законы физики преломляются.", options: [{ text: "К началу", next: "start" }] },
+q26: { text: "Обычный блокнот и ручка — один из самых надежных инструментов!", options: [{ text: "К началу", next: "start" }] },
+q27: { text: "Придумайте себе небольшую награду за выполнение каждого этапа.", options: [{ text: "К началу", next: "start" }] },
+q28: { text: "Да, он снижает нагрузку на глаза, делая цвета более теплыми.", options: [{ text: "К началу", next: "start" }] },
+q29: { text: "Вы можете открыть YouTube прямо с наших закладок и найти Lo-Fi стрим!", options: [{ text: "К началу", next: "start" }] },
+q30: { text: "В будущем возможно, но сейчас для этого нужны сложные биокупола.", options: [{ text: "К началу", next: "start" }] }
+};
+
+document.getElementById('openAiBtn').onclick = () => {
+aiScreen.classList.add('active');
+aiChatBody.innerHTML = '';
+aiAnswersArea.innerHTML = '';
+
+showTypingIndicator();
+setTimeout(() => {
+removeTypingIndicator();
+appendMessage('ai', chatTree.start.text);
+renderUserOptions(chatTree.start.options);
+}, 1200);
+};
+
+document.getElementById('closeAiBtn').onclick = () => aiScreen.classList.remove('active');
+
+function showTypingIndicator() {
+removeTypingIndicator();
+const typing = document.createElement('div');
+typing.className = 'typing-indicator';
+typing.id = 'typingIndicator';
+typing.innerHTML = `kőra ai печатает <span class="dots"></span><span class="dots" style="animation-delay:.2s"></span><span class="dots" style="animation-delay:.4s"></span>`;
+aiChatBody.appendChild(typing);
+aiChatBody.scrollTop = aiChatBody.scrollHeight;
+}
+
+function removeTypingIndicator() {
+const el = document.getElementById('typingIndicator');
+if (el) el.remove();
+}
+
+function appendMessage(sender, text) {
+const bubble = document.createElement('div');
+bubble.className = `chat-bubble ${sender}`;
+bubble.innerText = text;
+aiChatBody.appendChild(bubble);
+aiChatBody.scrollTop = aiChatBody.scrollHeight;
+}
+
+function renderUserOptions(options) {
+aiAnswersArea.innerHTML = '';
+if (!options) return;
+
+options.forEach(opt => {
+const btn = document.createElement('button');
+btn.className = 'ai-user-option';
+btn.innerText = opt.text;
+btn.onclick = () => handleUserChoice(opt.text, opt.next);
+aiAnswersArea.appendChild(btn);
+});
+}
+
+function handleUserChoice(userText, nextKey) {
+appendMessage('user', userText);
+aiAnswersArea.innerHTML = '';
+
+showTypingIndicator();
+setTimeout(() => {
+removeTypingIndicator();
+const node = chatTree[nextKey] || chatTree.start;
+appendMessage('ai', node.text);
+renderUserOptions(node.options);
+}, 1000);
+}
+</script>
+</body>
+</html>
